@@ -9,14 +9,23 @@ dist/
 web-build/
 expo-env.d.ts
 
-# Native
-.kotlin/
-*.orig.*
+# Native — iOS is generated at build time via expo prebuild / EAS Build
+/ios
+
+# Android build artifacts (source code is committed)
+/android/build/
+/android/app/build/
+/android/.gradle/
+/android/.cxx/
+/android/local.properties
+
+# Keystore & signing (NEVER commit)
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+*.keystore
 
 # Metro
 .metro-health-check*
@@ -26,8 +35,9 @@ npm-debug.*
 yarn-debug.*
 yarn-error.*
 
-# macOS
+# macOS / IDE
 .DS_Store
+.idea/
 *.pem
 
 # local env files
@@ -36,6 +46,11 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
-# generated native folders
-/ios
-/android
+# Deploy & utility scripts (not part of the app)
+_deploy_*.js
+_rebuild_apk.ps1
+_run_fix.js
+task-list.md
+
+# Backend (separate project)
+/backend/

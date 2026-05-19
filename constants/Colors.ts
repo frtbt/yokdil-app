@@ -1,0 +1,91 @@
+export const Colors = {
+  light: {
+    background: '#F0F2FF',
+    surface: '#FFFFFF',
+    surfaceSecondary: '#F8F9FF',
+    text: '#0F0F1A',
+    textSecondary: '#6B7280',
+    textTertiary: '#9CA3AF',
+    border: '#E5E7EB',
+    borderLight: '#F3F4F6',
+    primary: '#6C63FF',
+    primaryLight: '#EEF0FF',
+    tabBar: '#FFFFFF',
+    tabBarBorder: '#E5E7EB',
+    headerBg: '#0F0F1A',
+    shadow: '#6C63FF',
+  },
+  dark: {
+    background: '#0A0A14',
+    surface: '#13131F',
+    surfaceSecondary: '#1A1A2E',
+    text: '#F0F2FF',
+    textSecondary: '#9CA3AF',
+    textTertiary: '#6B7280',
+    border: '#2A2A3E',
+    borderLight: '#1E1E30',
+    primary: '#7C73FF',
+    primaryLight: '#1E1C3A',
+    tabBar: '#13131F',
+    tabBarBorder: '#2A2A3E',
+    headerBg: '#0A0A14',
+    shadow: '#6C63FF',
+  },
+};
+
+export const Gradients = {
+  konu:      ['#667EEA', '#764BA2'] as const,
+  deneme:    ['#F093FB', '#F5576C'] as const,
+  strateji:  ['#FF9A3C', '#FF6B35'] as const,
+  kelime:    ['#4ECDC4', '#2BAE9E'] as const,
+  ceviri:    ['#43E97B', '#38F9D7'] as const,
+  poster:    ['#F7971E', '#FFD200'] as const,
+  header:    ['#0F0F1A', '#1A1A3E'] as const,
+  headerCard:['#1E1C3A', '#2D2B5A'] as const,
+  premium:   ['#6C63FF', '#9B59B6'] as const,
+};
+
+export const CategoryColors = {
+  konu: {
+    gradient: Gradients.konu,
+    accent: '#667EEA',
+    bg: '#EEF0FF',
+    darkBg: '#1E1C3A',
+  },
+  deneme: {
+    gradient: Gradients.deneme,
+    accent: '#F5576C',
+    bg: '#FFF0F2',
+    darkBg: '#2A1A1E',
+  },
+  strateji: {
+    gradient: Gradients.strateji,
+    accent: '#FF6B35',
+    bg: '#FFF4EE',
+    darkBg: '#2A1A0E',
+  },
+  kelime: {
+    gradient: Gradients.kelime,
+    accent: '#4ECDC4',
+    bg: '#F0FFFE',
+    darkBg: '#0E2220',
+  },
+  ceviri: {
+    gradient: Gradients.ceviri,
+    accent: '#43E97B',
+    bg: '#F0FFF5',
+    darkBg: '#0E2217',
+  },
+  poster: {
+    gradient: Gradients.poster,
+    accent: '#F7971E',
+    bg: '#FFFBF0',
+    darkBg: '#221A0E',
+  },
+};
+
+export const DifficultyColors = {
+  'Başlangıç': { bg: '#D1FAE5', text: '#059669', darkBg: '#052e16', darkText: '#34d399' },
+  'Orta':      { bg: '#FEF3C7', text: '#D97706', darkBg: '#2d1a00', darkText: '#fbbf24' },
+  'İleri':     { bg: '#FEE2E2', text: '#DC2626', darkBg: '#2d0a0a', darkText: '#f87171' },
+};
