@@ -60,6 +60,7 @@ export interface DiffBreakdownItem {
 
 interface AppState {
   isDarkMode: boolean;
+  isFuatBaskanMode: boolean;
   selectedExam: ExamType;
   selectedDifficulty: Difficulty | null;
   searchQuery: string;
@@ -94,6 +95,7 @@ interface AppState {
   fetchError: string | null;
 
   toggleDarkMode: () => void;
+  toggleFuatBaskanMode: () => void;
   setSelectedExam: (exam: ExamType) => void;
   setSelectedDifficulty: (d: Difficulty | null) => void;
   setSearchQuery: (q: string) => void;
@@ -110,6 +112,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       isDarkMode: false,
+      isFuatBaskanMode: true,
       selectedExam: 'YÖKDİL',
       selectedDifficulty: null,
       searchQuery: '',
@@ -140,6 +143,7 @@ export const useAppStore = create<AppState>()(
       fetchError: null,
 
       toggleDarkMode: () => set((s) => ({ isDarkMode: !s.isDarkMode })),
+      toggleFuatBaskanMode: () => set((s) => ({ isFuatBaskanMode: !s.isFuatBaskanMode })),
 
       setSelectedExam: (exam) => {
         set({ selectedExam: exam });
@@ -308,8 +312,9 @@ export const useAppStore = create<AppState>()(
       storage: createJSONStorage(() => AsyncStorage),
       // Sadece kullanıcı tercihlerini ve favorileri disk'e yaz
       partialize: (s) => ({
-        isDarkMode:     s.isDarkMode,
-        selectedExam:   s.selectedExam,
+        isDarkMode:        s.isDarkMode,
+        isFuatBaskanMode:  s.isFuatBaskanMode,
+        selectedExam:      s.selectedExam,
         favoriteIds:    s.favoriteIds,
         favoriteDocs:   s.favoriteDocs,
         downloadedIds:  s.downloadedIds,

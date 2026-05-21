@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  useColorScheme, Animated,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { useAppStore } from '../../store/useAppStore';
 import type { ApiCategory } from '../../store/useAppStore';
 import { Colors, CategoryColors } from '../../constants/Colors';
+import { useTheme } from '../../store/useTheme';
 import type { ComponentProps } from 'react';
 import type { CategoryType } from '../../constants/Data';
 
@@ -101,10 +102,8 @@ function AnimatedCard({
 }
 
 export default function CategoriesScreen() {
-  const systemScheme = useColorScheme();
-  const { isDarkMode, categories, isLoadingCategories, fetchCategories } = useAppStore();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c = dark ? Colors.dark : Colors.light;
+  const { colors: c, dark, gradients } = useTheme();
+  const { categories, isLoadingCategories, fetchCategories } = useAppStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -122,7 +121,7 @@ export default function CategoriesScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: c.background }]}>
-      <LinearGradient colors={['#0F0F1A', '#1A1A3E']} style={styles.header}>
+      <LinearGradient colors={gradients.header} style={styles.header}>
         <SafeAreaView edges={['top']} style={styles.safeHeader}>
           <View style={styles.headerTop}>
             <View>

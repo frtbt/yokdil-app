@@ -11,22 +11,23 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0F0F1A"
+      "backgroundColor": "#121620"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yokdil.app",
       "minimumOsVersion": "16.0",
+      "deploymentTarget": "16.0",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "PDF sayfalarını ve kırpılan görselleri fotoğraf galerinize kaydetmek için erişim gerekiyor.",
-        "NSPhotoLibraryAddUsageDescription": "Kırpılan görselleri ve PDF sayfalarını fotoğraf galerinize kaydetmek için izin gerekiyor.",
+        "NSPhotoLibraryAddUsageDescription": "Uygulama içerisinden kırptığınız PDF görsellerini galeriye kaydedebilmek için bu izne ihtiyacımız vardır.",
         "NSCameraUsageDescription": "PDF içindeki QR kodları taramak için kamera erişimi gerekiyor."
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0F0F1A"
+        "backgroundColor": "#121620"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.yokdil.app"
@@ -37,7 +38,7 @@
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#6C63FF",
+          "color": "#e67e22",
           "sounds": []
         }
       ],
@@ -45,7 +46,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.REPLACE_WITH_IOS_CLIENT_ID_PREFIX"
+          "iosUrlScheme": "com.googleusercontent.apps.729425867994-udsdn982llrj7517cvjbidm0krnpvsi6"
         }
       ],
       "./plugins/withPdfTextModule"

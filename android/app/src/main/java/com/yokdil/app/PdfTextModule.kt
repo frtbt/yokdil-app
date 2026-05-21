@@ -18,11 +18,19 @@ class PdfTextModule(private val reactContext: ReactApplicationContext) :
     @ReactMethod
     fun extractText(filePath: String, promise: Promise) {
         Thread {
+            var fd: ParcelFileDescriptor? = null
+            var core: PdfiumCore? = null
             try {
                 val cleanPath = if (filePath.startsWith("file://")) filePath.substring(7) else filePath
                 val file = File(cleanPath)
-                val fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-                val core = PdfiumCore(reactContext, Config())
+
+                if (!file.exists() || !file.canRead()) {
+                    promise.reject("PDF_TEXT_ERROR", "Dosya bulunamadi veya okunamadi: $cleanPath")
+                    return@Thread
+                }
+
+                fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+                core = PdfiumCore(reactContext, Config())
                 val doc = core.newDocument(fd)
                 val pageCount = doc.getPageCount()
 
@@ -44,10 +52,12 @@ class PdfTextModule(private val reactContext: ReactApplicationContext) :
                 }
 
                 doc.close()
-                fd.close()
                 promise.resolve(result)
-            } catch (e: Exception) {
-                promise.reject("PDF_TEXT_ERROR", e.message ?: "Metin çıkarma başarısız", e)
+            } catch (e: Throwable) {
+                promise.reject("PDF_TEXT_ERROR", e.message ?: "Metin cikarma basarisiz")
+            } finally {
+                try { fd?.close() } catch (_: Throwable) {}
+                core = null
             }
         }.start()
     }

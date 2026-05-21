@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  Animated, Platform, useColorScheme, ActivityIndicator,
+  Animated, Platform, ActivityIndicator,
   Modal, TouchableWithoutFeedback, Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAppStore } from '../../store/useAppStore';
+import { useTheme } from '../../store/useTheme';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Colors } from '../../constants/Colors';
 import type { ExamType, Difficulty } from '../../constants/Data';
@@ -113,11 +114,9 @@ function buildEmptyPlan(dailyMin: number): DayPlan[] {
 // ── Ana ekran ─────────────────────────────────────────────────────────────────
 
 export default function StudyPlanScreen() {
-  const systemScheme = useColorScheme();
-  const { isDarkMode, categories, documents, fetchDocuments, fetchCategories, selectedExam } = useAppStore();
+  const { colors: c, dark, gradients } = useTheme();
+  const { categories, documents, fetchDocuments, fetchCategories, selectedExam } = useAppStore();
   const { user } = useAuthStore();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c    = dark ? Colors.dark : Colors.light;
 
   const [step,     setStep]     = useState(0);
   const [examType, setExamType] = useState<ExamType>(selectedExam);
@@ -204,7 +203,7 @@ export default function StudyPlanScreen() {
     <View style={[styles.root, { backgroundColor: c.background }]}>
 
       {/* Header */}
-      <LinearGradient colors={['#0F0F1A', '#1A1A3E']} style={styles.header}>
+      <LinearGradient colors={gradients.header} style={styles.header}>
         <SafeAreaView edges={['top']} style={styles.safeHeader}>
           <TouchableOpacity onPress={goBack} style={styles.backBtn}>
             <Feather name="arrow-left" size={20} color="#fff" />
@@ -222,7 +221,7 @@ export default function StudyPlanScreen() {
         {step < 5 && (
           <View style={styles.progressWrap}>
             <View style={[styles.progressTrack, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-              <View style={[styles.progressFill, { width: `${progress * 100}%` as any }]} />
+              <View style={[styles.progressFill, { width: `${progress * 100}%` as any, backgroundColor: c.primary }]} />
             </View>
           </View>
         )}
@@ -261,7 +260,7 @@ export default function StudyPlanScreen() {
         <View style={[styles.footer, { backgroundColor: c.background, borderTopColor: c.border }]}>
           <TouchableOpacity onPress={goNext} activeOpacity={0.85} style={styles.nextWrap}>
             <LinearGradient
-              colors={['#6C63FF', '#9B59B6']}
+              colors={gradients.btn}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={styles.nextBtn}
             >
@@ -407,19 +406,19 @@ function StepGoal({ dailyMin, onSelect, c }: {
               activeOpacity={0.8}
               style={[
                 styles.goalChip,
-                { backgroundColor: c.surface, borderColor: active ? '#6C63FF' : c.border },
-                active && { backgroundColor: '#6C63FF' },
+                { backgroundColor: c.surface, borderColor: active ? c.primary : c.border },
+                active && { backgroundColor: c.primary },
               ]}
             >
-              <Feather name="clock" size={16} color={active ? '#fff' : '#6C63FF'} />
+              <Feather name="clock" size={16} color={active ? '#fff' : c.primary} />
               <Text style={[styles.goalLabel, { color: active ? '#fff' : c.text }]}>{opt.label}</Text>
             </TouchableOpacity>
           );
         })}
       </View>
-      <View style={[styles.tipCard, { backgroundColor: '#6C63FF15', borderColor: '#6C63FF30' }]}>
-        <Feather name="info" size={15} color="#6C63FF" />
-        <Text style={[styles.tipText, { color: '#6C63FF' }]}>
+      <View style={[styles.tipCard, { backgroundColor: c.primary + '15', borderColor: c.primary + '30' }]}>
+        <Feather name="info" size={15} color={c.primary} />
+        <Text style={[styles.tipText, { color: c.primary }]}>
           Günde {dailyMin} dakika → haftalık {dailyMin * 7} dakika birikim.
         </Text>
       </View>
@@ -433,6 +432,7 @@ function StepDate({ examDate, onChange, daysLeft, c }: {
   examDate: string; onChange: (d: string) => void;
   daysLeft: number | null; c: typeof Colors.dark;
 }) {
+  const { gradients } = useTheme();
   return (
     <ScrollView contentContainerStyle={styles.stepScroll} showsVerticalScrollIndicator={false}>
       <Text style={[styles.stepTitle, { color: c.text }]}>Sınav tarihin ne zaman?</Text>
@@ -440,8 +440,8 @@ function StepDate({ examDate, onChange, daysLeft, c }: {
         İsteğe bağlı — plan yoğunluğunu ayarlamak için kullanılır.
       </Text>
       <View style={[styles.dateCard, { backgroundColor: c.surface, borderColor: c.border }]}>
-        <View style={[styles.dateIcon, { backgroundColor: '#6C63FF20' }]}>
-          <Feather name="calendar" size={22} color="#6C63FF" />
+        <View style={[styles.dateIcon, { backgroundColor: c.primary + '20' }]}>
+          <Feather name="calendar" size={22} color={c.primary} />
         </View>
         <DatePickerField
           value={examDate}
@@ -452,7 +452,7 @@ function StepDate({ examDate, onChange, daysLeft, c }: {
         />
       </View>
       {daysLeft !== null && (
-        <LinearGradient colors={['#6C63FF', '#9B59B6']} style={styles.countdownCard}>
+        <LinearGradient colors={gradients.btn} style={styles.countdownCard}>
           <Text style={styles.countdownNum}>{daysLeft}</Text>
           <Text style={styles.countdownLabel}>gün kaldı</Text>
           <Text style={styles.countdownSub}>
@@ -483,7 +483,7 @@ function StepMode({ mode, onSelect, c }: {
     {
       value: 'auto' as const,
       icon: 'cpu',
-      color: '#6C63FF',
+      color: c.primary,
       title: 'Otomatik Oluştur',
       desc: 'Sistem, seçtiğin sınav tipine, seviyene ve kalan süreye göre en uygun haftalık planı oluşturur. Sonradan düzenleyebilirsin.',
     },
@@ -553,7 +553,7 @@ function StepPlan({ plan, loading, activeDay, onDaySelect, onEditDay,
   if (loading) {
     return (
       <View style={styles.loadingBox}>
-        <ActivityIndicator size="large" color="#6C63FF" />
+        <ActivityIndicator size="large" color={c.primary} />
         <Text style={[styles.loadingText, { color: c.textSecondary }]}>Plan oluşturuluyor…</Text>
       </View>
     );
@@ -634,8 +634,8 @@ function StepPlan({ plan, loading, activeDay, onDaySelect, onEditDay,
                 onPress={() => onEditDay(activeDay)}
                 style={[styles.editDayBtn, { backgroundColor: c.surface, borderColor: c.border }]}
               >
-                <Feather name="edit-2" size={14} color="#6C63FF" />
-                <Text style={styles.editDayText}>Düzenle</Text>
+                <Feather name="edit-2" size={14} color={c.primary} />
+                <Text style={[styles.editDayText, { color: c.primary }]}>Düzenle</Text>
               </TouchableOpacity>
             </View>
           </View>

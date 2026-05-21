@@ -40,6 +40,11 @@ yarn-error.*
 .idea/
 *.pem
 
+# Google OAuth credentials (sensitive — never commit)
+*.apps.googleusercontent.com.plist
+GoogleService-Info.plist
+google-services.json
+
 # local env files
 .env*.local
 

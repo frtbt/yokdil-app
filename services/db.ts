@@ -94,7 +94,7 @@ export async function getDownloadUri(docId: number): Promise<string | null> {
       'SELECT local_uri FROM downloads WHERE doc_id = ?',
       [docId],
     );
-    if (!row) return null;
+    if (!row || !row.local_uri) return null;
     const info = await FileSystem.getInfoAsync(row.local_uri);
     if (!info.exists) {
       try { await db.runAsync('DELETE FROM downloads WHERE doc_id = ?', [docId]); } catch {}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { ComponentProps } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Feather } from '@expo/vector-icons';
@@ -8,15 +8,14 @@ import { router } from 'expo-router';
 import { useAppStore } from '../../store/useAppStore';
 import type { ApiDocument } from '../../store/useAppStore';
 import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../store/useTheme';
 import RecentDocCard from '../../components/RecentDocCard';
 
 type Tab = 'downloads' | 'favorites';
 
 export default function LibraryScreen() {
-  const systemScheme = useColorScheme();
-  const { isDarkMode, downloadedIds, downloadedDocs, favoriteIds, favoriteDocs } = useAppStore();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c = dark ? Colors.dark : Colors.light;
+  const { colors: c, dark, gradients } = useTheme();
+  const { downloadedIds, downloadedDocs, favoriteIds, favoriteDocs } = useAppStore();
   const [activeTab, setActiveTab] = useState<Tab>('downloads');
 
   const downloaded = downloadedIds.map((id) => downloadedDocs[id]).filter(Boolean) as ApiDocument[];
@@ -34,7 +33,7 @@ export default function LibraryScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: c.background }]}>
-      <LinearGradient colors={['#0F0F1A', '#1A1A3E']} style={styles.header}>
+      <LinearGradient colors={gradients.header} style={styles.header}>
         <SafeAreaView edges={['top']} style={styles.safeHeader}>
           <Text style={styles.headerTitle}>Kütüphanem</Text>
 
@@ -91,11 +90,12 @@ interface TabButtonProps {
 }
 
 function TabButton({ label, icon, count, active, onPress }: TabButtonProps) {
+  const { colors: c } = useTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.8}
-      style={[styles.tab, active && styles.tabActive]}
+      style={[styles.tab, active && { backgroundColor: c.primary + '55', borderColor: c.primary + '99' }]}
     >
       <Feather name={icon} size={14} color={active ? '#fff' : 'rgba(255,255,255,0.5)'} />
       <Text style={[styles.tabLabel, { color: active ? '#fff' : 'rgba(255,255,255,0.5)' }]}>
@@ -103,7 +103,7 @@ function TabButton({ label, icon, count, active, onPress }: TabButtonProps) {
       </Text>
       {count > 0 && (
         <View style={[styles.badge, active ? styles.badgeActive : styles.badgeInactive]}>
-          <Text style={[styles.badgeText, { color: active ? '#6C63FF' : 'rgba(255,255,255,0.6)' }]}>
+          <Text style={[styles.badgeText, { color: active ? c.primary : 'rgba(255,255,255,0.6)' }]}>
             {count}
           </Text>
         </View>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  useColorScheme, ActivityIndicator,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +11,7 @@ import * as Haptics from 'expo-haptics';
 import { useAppStore } from '../../store/useAppStore';
 import type { ApiDocument } from '../../store/useAppStore';
 import { Colors, CategoryColors } from '../../constants/Colors';
+import { useTheme } from '../../store/useTheme';
 import { EXAM_TYPES } from '../../constants/Data';
 import type { ExamType } from '../../constants/Data';
 import { ENDPOINTS } from '../../constants/Api';
@@ -31,10 +32,8 @@ const ICON_MAP: Record<string, FeatherName> = {
 export default function CategoryScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
-  const systemScheme = useColorScheme();
-  const { isDarkMode, categories, selectedExam } = useAppStore();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c = dark ? Colors.dark : Colors.light;
+  const { colors: c, dark } = useTheme();
+  const { categories, selectedExam } = useAppStore();
 
   const [activeExam, setActiveExam] = useState<ExamType>(selectedExam);
   const [docs, setDocs] = useState<ApiDocument[]>([]);

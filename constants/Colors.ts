@@ -1,4 +1,20 @@
 export const Colors = {
+  fuatBaskan: {
+    background:       '#121620',
+    surface:          '#1e2536',
+    surfaceSecondary: '#242c3d',
+    text:             '#ffffff',
+    textSecondary:    '#a0aec0',
+    textTertiary:     '#718096',
+    border:           '#2d3748',
+    borderLight:      '#2a3347',
+    primary:          '#e67e22',
+    primaryLight:     '#2d1f0e',
+    tabBar:           '#181d2b',
+    tabBarBorder:     '#2d3748',
+    headerBg:         '#0e1119',
+    shadow:           '#e67e22',
+  },
   light: {
     background: '#F0F2FF',
     surface: '#FFFFFF',
@@ -34,15 +50,18 @@ export const Colors = {
 };
 
 export const Gradients = {
-  konu:      ['#667EEA', '#764BA2'] as const,
-  deneme:    ['#F093FB', '#F5576C'] as const,
-  strateji:  ['#FF9A3C', '#FF6B35'] as const,
-  kelime:    ['#4ECDC4', '#2BAE9E'] as const,
-  ceviri:    ['#43E97B', '#38F9D7'] as const,
-  poster:    ['#F7971E', '#FFD200'] as const,
-  header:    ['#0F0F1A', '#1A1A3E'] as const,
-  headerCard:['#1E1C3A', '#2D2B5A'] as const,
-  premium:   ['#6C63FF', '#9B59B6'] as const,
+  konu:        ['#667EEA', '#764BA2'] as const,
+  deneme:      ['#F093FB', '#F5576C'] as const,
+  strateji:    ['#FF9A3C', '#FF6B35'] as const,
+  kelime:      ['#4ECDC4', '#2BAE9E'] as const,
+  ceviri:      ['#43E97B', '#38F9D7'] as const,
+  poster:      ['#F7971E', '#FFD200'] as const,
+  header:      ['#0F0F1A', '#1A1A3E'] as const,
+  headerBrand: ['#0e1119', '#181d2b'] as const,
+  headerCard:  ['#1E1C3A', '#2D2B5A'] as const,
+  cardBrand:   ['#1e2536', '#242c3d'] as const,
+  premium:     ['#6C63FF', '#9B59B6'] as const,
+  brand:       ['#e67e22', '#f39c12'] as const,
 };
 
 export const CategoryColors = {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Modal,
-  useColorScheme, ActivityIndicator, Platform,
+  ActivityIndicator, Platform,
   Share, TextInput, Alert, Linking, ScrollView,
   KeyboardAvoidingView, TouchableWithoutFeedback,
 } from 'react-native';
@@ -21,6 +21,7 @@ import PDFReader from '../../components/PDFReader';
 import { useAppStore } from '../../store/useAppStore';
 import type { ApiDocument } from '../../store/useAppStore';
 import { Colors, DifficultyColors } from '../../constants/Colors';
+import { useTheme } from '../../store/useTheme';
 import { API_BASE, ENDPOINTS } from '../../constants/Api';
 import { useAuthStore } from '../../store/useAuthStore';
 import { getDownloadUri, saveDownload, removeDownload } from '../../services/db';
@@ -52,14 +53,22 @@ async function openYoutubeExternal(url: string) {
 // ── Önbellek İndirme Ekranı ────────────────────────────────────────────────────
 
 function PrefetchProgressScreen({ progress }: { progress: number }) {
-  const pct = Math.round(progress * 100);
+  const { colors: c } = useTheme();
+  // progress < 0: Content-Length bilinmiyor (indeterminate)
+  const isUnknown = progress < 0;
+  const pct = isUnknown ? 0 : Math.round(progress * 100);
   return (
     <View style={styles.prefetchWrap}>
-      <ActivityIndicator size="large" color="#6C63FF" />
+      <ActivityIndicator size="large" color={c.primary} />
       <Text style={styles.prefetchTitle}>Dosya Hazırlanıyor...</Text>
-      <Text style={styles.prefetchPct}>{pct}%</Text>
+      {!isUnknown && <Text style={[styles.prefetchPct, { color: c.primary }]}>{pct}%</Text>}
       <View style={styles.prefetchBarBg}>
-        <View style={[styles.prefetchBarFill, { width: `${pct}%` as any }]} />
+        <View style={[
+          styles.prefetchBarFill,
+          isUnknown
+            ? { width: '60%', backgroundColor: c.primary, opacity: 0.5 }
+            : { width: `${pct}%` as any, backgroundColor: c.primary },
+        ]} />
       </View>
     </View>
   );
@@ -70,15 +79,15 @@ function PrefetchProgressScreen({ progress }: { progress: number }) {
 function NoFileScreen({ doc, c }: { doc: ApiDocument | null; c: typeof Colors.dark }) {
   return (
     <View style={[styles.noFileWrap, { backgroundColor: c.surfaceSecondary }]}>
-      <View style={[styles.noFileIcon, { backgroundColor: (doc?.thumbnail_color ?? '#6C63FF') + '22' }]}>
-        <Feather name="file-text" size={52} color={doc?.thumbnail_color ?? '#6C63FF'} />
+      <View style={[styles.noFileIcon, { backgroundColor: (doc?.thumbnail_color ?? c.primary) + '22' }]}>
+        <Feather name="file-text" size={52} color={doc?.thumbnail_color ?? c.primary} />
       </View>
       <Text style={[styles.noFileTitle, { color: c.text }]}>{doc?.title ?? 'Doküman'}</Text>
       <Text style={[styles.noFileSub, { color: c.textSecondary }]}>{doc?.subtitle ?? ''}</Text>
       <View style={styles.noFileMeta}>
         {doc?.exam_type && (
-          <View style={[styles.metaBadge, { backgroundColor: '#6C63FF22' }]}>
-            <Text style={[styles.metaBadgeText, { color: '#6C63FF' }]}>{doc.exam_type}</Text>
+          <View style={[styles.metaBadge, { backgroundColor: c.primary + '22' }]}>
+            <Text style={[styles.metaBadgeText, { color: c.primary }]}>{doc.exam_type}</Text>
           </View>
         )}
         {doc?.difficulty && (
@@ -104,12 +113,10 @@ function NoFileScreen({ doc, c }: { doc: ApiDocument | null; c: typeof Colors.da
 export default function PDFViewer() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const systemScheme = useColorScheme();
-  const { isDarkMode, documents, toggleFavorite, favoriteIds, toggleDownload, downloadedIds } = useAppStore();
+  const { colors: c } = useTheme();
+  const { documents, toggleFavorite, favoriteIds, toggleDownload, downloadedIds } = useAppStore();
   const { token, user } = useAuthStore();
   const insets = useSafeAreaInsets();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c = dark ? Colors.dark : Colors.light;
 
   const isOnline = useNetworkStatus();
 
@@ -129,6 +136,7 @@ export default function PDFViewer() {
   const [prefetchUri, setPrefetchUri]           = useState<string | null>(null);
   const [isPrefetching, setIsPrefetching]       = useState(false);
   const [prefetchProgress, setPrefetchProgress] = useState(0);
+  const [prefetchError, setPrefetchError]       = useState(false);
   const prefetchDownloadRef = useRef<any>(null);
 
   // ── Modaller ──
@@ -169,34 +177,54 @@ export default function PDFViewer() {
   // ── Pre-fetch: localUri yoksa cacheDirectory'e sessizce indir ──
   const prefetchPdf = useCallback(async (fileUrl: string) => {
     const cachePath = `${FileSystem.cacheDirectory ?? ''}yokdil_preview_${docId}.pdf`;
-    try {
-      const info = await FileSystem.getInfoAsync(cachePath);
-      if (info.exists) { setPrefetchUri(cachePath); return; }
-    } catch {}
     setIsPrefetching(true);
     setPrefetchProgress(0);
+    setPrefetchError(false);
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let dl: any = null;
+
     try {
-      const dl = FileSystem.createDownloadResumable(
+      dl = FileSystem.createDownloadResumable(
         fileUrl, cachePath, {},
         (p) => {
+          // Content-Length bilinmiyorsa -1 gönder (indeterminate)
           const prog = p.totalBytesExpectedToWrite > 0
             ? p.totalBytesWritten / p.totalBytesExpectedToWrite
-            : 0;
+            : -1;
           setPrefetchProgress(prog);
         },
       );
       prefetchDownloadRef.current = dl;
-      const result = await dl.downloadAsync();
-      if (result?.uri) setPrefetchUri(result.uri);
+
+      // 30 saniye timeout: takılı kalırsa direkt URL'den aç
+      const timeoutPromise = new Promise<null>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          dl?.pauseAsync?.().catch(() => {});
+          reject(new Error('timeout'));
+        }, 30000);
+      });
+
+      const result = await Promise.race([dl.downloadAsync(), timeoutPromise]);
+      if (result?.uri) {
+        setPrefetchUri(result.uri);
+      } else {
+        // İndirme tamamlandı ama URI yok → direkt URL'den yükle
+        setPrefetchUri(fileUrl);
+      }
     } catch {
-      setPrefetchUri(null);
+      // Hata veya timeout → direkt URL ile yükle (react-native-pdf remote URL'i destekler)
+      setPrefetchUri(fileUrl);
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       setIsPrefetching(false);
       prefetchDownloadRef.current = null;
     }
   }, [docId]);
 
   useEffect(() => {
+    setPrefetchError(false);
+    setPrefetchProgress(0);
     if (localUri) { setPrefetchUri(localUri); return; }
     if (doc?.file_url) prefetchPdf(doc.file_url);
   }, [localUri, doc?.file_url, prefetchPdf]);
@@ -266,8 +294,7 @@ export default function PDFViewer() {
           return;
         }
         const cacheUri = (FileSystem.cacheDirectory ?? '') + `print_${docId}.pdf`;
-        const info = await FileSystem.getInfoAsync(cacheUri);
-        if (!info.exists) await FileSystem.downloadAsync(doc.file_url, cacheUri);
+        try { await FileSystem.downloadAsync(doc.file_url, cacheUri); } catch {}
         fileToShare = cacheUri;
       }
       await Sharing.shareAsync(fileToShare, { UTI: 'com.adobe.pdf', mimeType: 'application/pdf' });
@@ -299,16 +326,9 @@ export default function PDFViewer() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsDownloading(true);
     try {
-      // documentDirectory varlığını doğrula
       const baseDir = FileSystem.documentDirectory;
       if (!baseDir) {
         Alert.alert('Hata', 'İndirme dizini bulunamadı.');
-        setIsDownloading(false);
-        return;
-      }
-      const dirInfo = await FileSystem.getInfoAsync(baseDir);
-      if (!dirInfo.exists) {
-        Alert.alert('Hata', 'Depolama dizinine erişilemiyor.');
         setIsDownloading(false);
         return;
       }
@@ -460,17 +480,17 @@ export default function PDFViewer() {
       {/* ── İNDİRME PROGRESS ── */}
       {isDownloading && (
         <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${downloadProgress * 100}%` as any }]} />
+          <View style={[styles.progressFill, { width: `${downloadProgress * 100}%` as any, backgroundColor: c.primary }]} />
         </View>
       )}
 
       {/* ── ANA İÇERİK ── */}
       {fetchLoading ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color={c.primary} />
           <Text style={styles.loadingText}>Yükleniyor...</Text>
         </View>
-      ) : isPrefetching || ((localUri || doc?.file_url) && !prefetchUri) ? (
+      ) : isPrefetching ? (
         <PrefetchProgressScreen progress={prefetchProgress} />
       ) : !prefetchUri ? (
         <NoFileScreen doc={doc} c={c} />
@@ -632,7 +652,7 @@ export default function PDFViewer() {
                     <Text style={[styles.shareLabel, { color: c.textSecondary }]}>E-posta</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.shareOption} onPress={handleSystemShare}>
-                    <View style={[styles.shareIcon, { backgroundColor: '#6C63FF22' }]}>
+                    <View style={[styles.shareIcon, { backgroundColor: c.primary + '22' }]}>
                       <Text style={styles.shareIconEmoji}>⬆️</Text>
                     </View>
                     <Text style={[styles.shareLabel, { color: c.textSecondary }]}>Diğer</Text>
@@ -685,7 +705,7 @@ export default function PDFViewer() {
                     >
                       <Text style={[styles.notesCancelText, { color: c.textSecondary }]}>İptal</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={handleSaveNote} style={styles.notesSaveBtn}>
+                    <TouchableOpacity onPress={handleSaveNote} style={[styles.notesSaveBtn, { backgroundColor: c.primary }]}>
                       <Feather name="check" size={15} color="#fff" />
                       <Text style={styles.notesSaveText}>Kaydet</Text>
                     </TouchableOpacity>

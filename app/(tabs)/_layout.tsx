@@ -1,10 +1,9 @@
 import { Tabs, Redirect } from 'expo-router';
-import { useColorScheme, View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { useAppStore } from '../../store/useAppStore';
 import { useAuthStore } from '../../store/useAuthStore';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../store/useTheme';
 import type { ComponentProps } from 'react';
 
 type FeatherName = ComponentProps<typeof Feather>['name'];
@@ -13,27 +12,40 @@ interface TabIconProps {
   name: FeatherName;
   focused: boolean;
   color: string;
+  primaryColor: string;
+  primaryLightColor: string;
 }
 
-function TabIcon({ name, focused, color }: TabIconProps) {
+function TabIcon({ name, focused, color, primaryColor, primaryLightColor }: TabIconProps) {
   return (
-    <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-      <Feather name={name} size={22} color={focused ? '#6C63FF' : color} />
+    <View style={[
+      styles.iconWrap,
+      focused && { backgroundColor: primaryLightColor },
+    ]}>
+      <Feather name={name} size={22} color={focused ? primaryColor : color} />
     </View>
   );
 }
 
 export default function TabLayout() {
-  const systemScheme = useColorScheme();
-  const { isDarkMode } = useAppStore();
+  const { colors: c } = useTheme();
   const { isAuthenticated } = useAuthStore();
   const insets = useSafeAreaInsets();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c = dark ? Colors.dark : Colors.light;
 
   if (!isAuthenticated) {
     return <Redirect href="/(auth)" />;
   }
+
+  const tabIcon = (name: FeatherName) =>
+    ({ focused, color }: { focused: boolean; color: string }) => (
+      <TabIcon
+        name={name}
+        focused={focused}
+        color={color}
+        primaryColor={c.primary}
+        primaryLightColor={c.primaryLight}
+      />
+    );
 
   return (
     <Tabs
@@ -50,50 +62,15 @@ export default function TabLayout() {
           shadowOpacity: 0,
         },
         tabBarShowLabel: false,
-        tabBarActiveTintColor: '#6C63FF',
+        tabBarActiveTintColor: c.primary,
         tabBarInactiveTintColor: c.textTertiary,
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="home" focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="categories"
-        options={{
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="grid" focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="exams"
-        options={{
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="clipboard" focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="library"
-        options={{
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="download-cloud" focused={focused} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          tabBarIcon: ({ focused, color }) => (
-            <TabIcon name="user" focused={focused} color={color} />
-          ),
-        }}
-      />
+      <Tabs.Screen name="index"      options={{ tabBarIcon: tabIcon('home')           }} />
+      <Tabs.Screen name="categories" options={{ tabBarIcon: tabIcon('grid')           }} />
+      <Tabs.Screen name="exams"      options={{ tabBarIcon: tabIcon('clipboard')      }} />
+      <Tabs.Screen name="library"    options={{ tabBarIcon: tabIcon('download-cloud') }} />
+      <Tabs.Screen name="profile"    options={{ tabBarIcon: tabIcon('user')           }} />
     </Tabs>
   );
 }
@@ -105,8 +82,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconWrapActive: {
-    backgroundColor: '#EEF0FF',
   },
 });

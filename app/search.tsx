@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  useColorScheme, ActivityIndicator, TextInput, Keyboard,
+  ActivityIndicator, TextInput, Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { useAppStore } from '../store/useAppStore';
 import { useAuthStore } from '../store/useAuthStore';
 import type { ApiDocument } from '../store/useAppStore';
 import { Colors } from '../constants/Colors';
+import { useTheme } from '../store/useTheme';
 import { EXAM_TYPES } from '../constants/Data';
 import type { ExamType } from '../constants/Data';
 import { ENDPOINTS } from '../constants/Api';
@@ -22,11 +23,8 @@ type SearchTab  = 'docs' | 'exams';
 
 export default function SearchScreen() {
   const router = useRouter();
-  const systemScheme = useColorScheme();
-  const { isDarkMode } = useAppStore();
+  const { colors: c, dark } = useTheme();
   const { token } = useAuthStore();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c = dark ? Colors.dark : Colors.light;
 
   const [query, setQuery]           = useState('');
   const [tab, setTab]               = useState<SearchTab>('docs');
@@ -145,14 +143,14 @@ export default function SearchScreen() {
             <TouchableOpacity
               key={t}
               onPress={() => handleTabChange(t)}
-              style={[styles.tabBtn, tab === t && styles.tabBtnActive]}
+              style={[styles.tabBtn, tab === t && { borderBottomColor: c.primary }]}
             >
               <Feather
                 name={t === 'docs' ? 'file-text' : 'clipboard'}
                 size={14}
-                color={tab === t ? '#6C63FF' : c.textTertiary}
+                color={tab === t ? c.primary : c.textTertiary}
               />
-              <Text style={[styles.tabText, { color: tab === t ? '#6C63FF' : c.textTertiary }]}>
+              <Text style={[styles.tabText, { color: tab === t ? c.primary : c.textTertiary }]}>
                 {t === 'docs' ? 'Dokümanlar' : 'Denemeler'}
               </Text>
             </TouchableOpacity>
@@ -168,7 +166,7 @@ export default function SearchScreen() {
               style={[
                 styles.pill,
                 examFilter === exam
-                  ? styles.pillActive
+                  ? { backgroundColor: c.primary, borderColor: c.primary }
                   : { backgroundColor: dark ? '#1A1A3E' : '#F0F2FF', borderColor: c.border },
               ]}
             >
@@ -183,12 +181,12 @@ export default function SearchScreen() {
       {/* ── İçerik ── */}
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#6C63FF" />
+          <ActivityIndicator size="large" color={c.primary} />
         </View>
       ) : !hasQuery ? (
         <View style={styles.center}>
           <View style={[styles.hintIcon, { backgroundColor: dark ? '#1A1A3E' : '#F0F2FF' }]}>
-            <Feather name="search" size={32} color="#6C63FF" />
+            <Feather name="search" size={32} color={c.primary} />
           </View>
           <Text style={[styles.hintTitle, { color: c.text }]}>Ne aramak istiyorsun?</Text>
           <Text style={[styles.hintSub, { color: c.textSecondary }]}>

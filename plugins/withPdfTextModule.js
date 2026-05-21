@@ -1,4 +1,4 @@
-const { withXcodeProject } = require('@expo/config-plugins');
+const { withXcodeProject, withPodfileProperties } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
@@ -56,11 +56,13 @@ RCT_EXPORT_METHOD(extractText:(NSString *)filePath
 @end
 `;
 
-/**
- * Expo Config Plugin: iOS'a PDFKit tabanli PdfTextModule native modulu ekler.
- * EAS Build sirasinda expo prebuild calistiginda devreye girer.
- */
 const withPdfTextModule = (config) => {
+  // Podfile deployment target'i her prebuild'de 16.0 olarak sabitle
+  config = withPodfileProperties(config, (config) => {
+    config.modResults['ios.deploymentTarget'] = '16.0';
+    return config;
+  });
+
   return withXcodeProject(config, (config) => {
     const iosDir = config.modRequest.platformProjectRoot; // ios/
     const projectName = config.modRequest.projectName;    // yokdilapp
@@ -84,7 +86,12 @@ const withPdfTextModule = (config) => {
     );
 
     if (!alreadyAdded) {
-      xcodeProject.addSourceFile('PdfTextModule.m', {}, projectName);
+      const groupKey = xcodeProject.findPBXGroupKey({ name: projectName });
+      xcodeProject.addSourceFile(
+        `${projectName}/PdfTextModule.m`,
+        { target: xcodeProject.getFirstTarget().uuid },
+        groupKey
+      );
     }
 
     return config;

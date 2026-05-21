@@ -2,7 +2,7 @@ import React, { useCallback, useRef, useEffect, useState, useMemo } from 'react'
 import { useFocusEffect } from 'expo-router';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  useColorScheme, Animated, Dimensions, Modal, Pressable,
+  Animated, Dimensions, Modal, Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,6 +14,7 @@ import { useAppStore } from '../../store/useAppStore';
 import type { ApiDocument, RecentHistoryItem } from '../../store/useAppStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../store/useTheme';
 import { EXAM_TYPES, DIFFICULTY_LEVELS } from '../../constants/Data';
 import type { ExamType, Difficulty } from '../../constants/Data';
 import RecentDocCard from '../../components/RecentDocCard';
@@ -46,6 +47,7 @@ function useFadeIn(delay = 0) {
 
 // ─── ExamPill ─────────────────────────────────────────────────────────────────
 function ExamPill({ label, active, onPress }: { label: ExamType; active: boolean; onPress: () => void }) {
+  const { colors: c } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
   const handlePress = () => {
     Haptics.selectionAsync();
@@ -60,7 +62,9 @@ function ExamPill({ label, active, onPress }: { label: ExamType; active: boolean
       <TouchableOpacity
         onPress={handlePress}
         activeOpacity={0.85}
-        style={[styles.pill, active ? styles.pillActive : styles.pillInactive]}
+        style={[styles.pill, active
+          ? { backgroundColor: c.primary, borderColor: c.primary }
+          : styles.pillInactive]}
       >
         <Text style={[styles.pillText, active ? styles.pillTextActive : styles.pillTextInactive]}>
           {label}
@@ -80,10 +84,9 @@ interface FilterBottomSheetProps {
   onClose: () => void;
   selectedDifficulty: Difficulty | null;
   onSelectDifficulty: (d: Difficulty | null) => void;
-  isDark: boolean;
 }
-function FilterBottomSheet({ visible, onClose, selectedDifficulty, onSelectDifficulty, isDark }: FilterBottomSheetProps) {
-  const c        = isDark ? Colors.dark : Colors.light;
+function FilterBottomSheet({ visible, onClose, selectedDifficulty, onSelectDifficulty }: FilterBottomSheetProps) {
+  const { colors: c } = useTheme();
   const slideY   = useRef(new Animated.Value(400)).current;
   const bgOpacity = useRef(new Animated.Value(0)).current;
 
@@ -133,7 +136,7 @@ function FilterBottomSheet({ visible, onClose, selectedDifficulty, onSelectDiffi
           {/* Tümü */}
           <TouchableOpacity
             onPress={() => { Haptics.selectionAsync(); setLocalDiff(null); }}
-            style={[styles.bsChip, localDiff === null && styles.bsChipActiveNeutral]}
+            style={[styles.bsChip, localDiff === null && { backgroundColor: c.primary, borderColor: c.primary }]}
           >
             <Text style={[styles.bsChipText, { color: localDiff === null ? '#fff' : c.textSecondary }]}>
               Tümü
@@ -161,7 +164,7 @@ function FilterBottomSheet({ visible, onClose, selectedDifficulty, onSelectDiffi
             <Text style={[styles.bsResetText, { color: c.textSecondary }]}>Temizle</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={apply} style={styles.bsApplyBtn}>
-            <LinearGradient colors={['#6C63FF', '#9B59B6']} style={styles.bsApplyGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+            <LinearGradient colors={gradients.btn} style={styles.bsApplyGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
               <Text style={styles.bsApplyText}>Uygula</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -177,6 +180,7 @@ function DailyGoalCard({
 }: {
   streakDays: number; todayStudySec: number; goalMin: number; c: typeof Colors.dark;
 }) {
+  const { gradients: g, colors: t } = useTheme();
   const todayMin   = Math.floor(todayStudySec / 60);
   const goalSec    = goalMin * 60;
   const progress   = goalSec > 0 ? Math.min(todayStudySec / goalSec, 1) : 0;
@@ -191,7 +195,7 @@ function DailyGoalCard({
   const tip = MOTIVATE[Math.floor(Date.now() / 86_400_000) % MOTIVATE.length];
 
   return (
-    <LinearGradient colors={['#1E1C3A', '#2D2B5A']} style={styles.goalCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+    <LinearGradient colors={g.card} style={styles.goalCard} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
       {/* Streak + title row */}
       <View style={styles.goalHeader}>
         <View>
@@ -211,7 +215,7 @@ function DailyGoalCard({
 
       {/* Progress bar */}
       <View style={styles.progressTrack}>
-        <Animated.View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
+        <Animated.View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%`, backgroundColor: t.primary }]} />
       </View>
       <Text style={styles.progressPct}>{Math.round(progress * 100)}%</Text>
 
@@ -222,8 +226,9 @@ function DailyGoalCard({
 
 // ─── StreakOnlyCard ───────────────────────────────────────────────────────────
 function StreakOnlyCard({ streakDays, c }: { streakDays: number; c: typeof Colors.dark }) {
+  const { gradients: g } = useTheme();
   return (
-    <LinearGradient colors={['#1E1C3A', '#2D2B5A']} style={[styles.goalCard, { paddingVertical: 18 }]}>
+    <LinearGradient colors={g.card} style={[styles.goalCard, { paddingVertical: 18 }]}>
       <View style={styles.goalHeader}>
         <View>
           <Text style={styles.goalTitle}>Çalışma Serisi</Text>
@@ -267,9 +272,9 @@ function ContinueCard({ item, onPress }: { item: RecentHistoryItem; onPress: () 
 
 // ─── HomeScreen ───────────────────────────────────────────────────────────────
 export default function HomeScreen() {
-  const systemScheme = useColorScheme();
+  const { colors: c, dark, gradients } = useTheme();
   const {
-    isDarkMode, selectedExam, selectedDifficulty,
+    selectedExam, selectedDifficulty,
     setSelectedExam, setSelectedDifficulty, toggleDarkMode,
     studyMinutes, todayStudySec, openedDocs, streakDays, recentHistory, downloadedIds,
     documents,
@@ -277,8 +282,6 @@ export default function HomeScreen() {
     fetchCategories, fetchDocuments, fetchUserStats, fetchFavorites,
   } = useAppStore();
   const { token, user } = useAuthStore();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c    = dark ? Colors.dark : Colors.light;
   const router = useRouter();
 
   const [filterVisible, setFilterVisible] = useState(false);
@@ -354,7 +357,7 @@ export default function HomeScreen() {
   return (
     <View style={[styles.root, { backgroundColor: c.background }]}>
       {/* ── HEADER ── */}
-      <LinearGradient colors={['#0F0F1A', '#1A1A3E']} style={styles.header}>
+      <LinearGradient colors={gradients.header} style={styles.header}>
         <SafeAreaView edges={['top']} style={styles.safeHeader}>
           <Animated.View style={[styles.headerTop, headerAnim]}>
             <Text style={styles.greeting}>{getGreeting(user?.name ?? 'Öğrenci')}</Text>
@@ -384,7 +387,7 @@ export default function HomeScreen() {
             <View style={{ flex: 1 }} />
             <TouchableOpacity
               onPress={() => { Haptics.selectionAsync(); setFilterVisible(true); }}
-              style={[styles.filterBtn, selectedDifficulty && styles.filterBtnActive]}
+              style={[styles.filterBtn, selectedDifficulty && { backgroundColor: c.primary, borderColor: c.primary }]}
               activeOpacity={0.8}
             >
               <Feather name="sliders" size={13} color={selectedDifficulty ? '#fff' : 'rgba(255,255,255,0.75)'} />
@@ -409,7 +412,6 @@ export default function HomeScreen() {
         onClose={() => setFilterVisible(false)}
         selectedDifficulty={selectedDifficulty}
         onSelectDifficulty={setSelectedDifficulty}
-        isDark={dark}
       />
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -457,9 +459,9 @@ export default function HomeScreen() {
           <Animated.View style={recentAnim}>
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: c.text }]}>Sana Özel</Text>
-              <View style={[styles.recoBadge, { backgroundColor: '#6C63FF22' }]}>
-                <Feather name="target" size={12} color="#6C63FF" />
-                <Text style={styles.recoBadgeText}>{recommendedDifficulty} · {targetScore} hedef</Text>
+              <View style={[styles.recoBadge, { backgroundColor: c.primary + '22' }]}>
+                <Feather name="target" size={12} color={c.primary} />
+                <Text style={[styles.recoBadgeText, { color: c.primary }]}>{recommendedDifficulty} · {targetScore} hedef</Text>
               </View>
             </View>
             {recommendedDocs.length > 0 ? (
@@ -474,9 +476,9 @@ export default function HomeScreen() {
                 </Text>
                 <TouchableOpacity
                   onPress={() => router.push('/(tabs)/categories' as any)}
-                  style={styles.recoAllDoneBtn}
+                  style={[styles.recoAllDoneBtn, { backgroundColor: c.primary + '22' }]}
                 >
-                  <Text style={styles.recoAllDoneBtnText}>Diğer kategorilere bak →</Text>
+                  <Text style={[styles.recoAllDoneBtnText, { color: c.primary }]}>Diğer kategorilere bak →</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -489,8 +491,8 @@ export default function HomeScreen() {
             <Text style={[styles.sectionTitle, { color: c.text }]}>
               {recommendedDocs.length > 0 ? 'Tüm Dokümanlar' : 'Son Eklenenler'}
             </Text>
-            <View style={[styles.examTag, { backgroundColor: '#6C63FF22' }]}>
-              <Text style={styles.examTagText}>{selectedExam}</Text>
+            <View style={[styles.examTag, { backgroundColor: c.primary + '22' }]}>
+              <Text style={[styles.examTagText, { color: c.primary }]}>{selectedExam}</Text>
             </View>
           </View>
 
@@ -515,7 +517,7 @@ export default function HomeScreen() {
           activeOpacity={0.92}
           onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
         >
-          <LinearGradient colors={['#6C63FF', '#9B59B6']} style={styles.banner}>
+          <LinearGradient colors={gradients.btn} style={styles.banner}>
             <View style={styles.bannerDecor} />
             <View style={styles.bannerDecor2} />
             <View style={styles.bannerContent}>
@@ -526,8 +528,8 @@ export default function HomeScreen() {
               <Text style={styles.bannerTitle}>YÖKDİL 2025{'\n'}Hazırlık Paketi</Text>
               <Text style={styles.bannerSub}>120+ soru, 8 tam deneme, kapsamlı konu anlatımları</Text>
               <View style={styles.bannerBtn}>
-                <Text style={styles.bannerBtnText}>Keşfet</Text>
-                <Feather name="arrow-right" size={14} color="#6C63FF" />
+                <Text style={[styles.bannerBtnText, { color: c.primary }]}>Keşfet</Text>
+                <Feather name="arrow-right" size={14} color={c.primary} />
               </View>
             </View>
             <View style={styles.bannerRight}>

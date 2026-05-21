@@ -2,7 +2,8 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { TouchableOpacity, Text, View, StyleSheet, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Feather } from '@expo/vector-icons';
-import { Colors, DifficultyColors } from '../constants/Colors';
+import { DifficultyColors } from '../constants/Colors';
+import { useTheme } from '../store/useTheme';
 import { useAppStore } from '../store/useAppStore';
 import type { ApiDocument } from '../store/useAppStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -45,7 +46,7 @@ interface Props {
 }
 
 export default function RecentDocCard({ doc, isDark, index, onPress }: Props) {
-  const c = isDark ? Colors.dark : Colors.light;
+  const { colors: c } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const translateX = useRef(new Animated.Value(20)).current;
@@ -83,7 +84,7 @@ export default function RecentDocCard({ doc, isDark, index, onPress }: Props) {
   const examType   = doc.exam_type  ?? doc.examType  ?? 'YÖKDİL';
   const isNew      = doc.is_new     ?? doc.isNew     ?? false;
   const hasVideo   = doc.has_video  ?? (!!doc.video_url) ?? false;
-  const thumbColor = doc.thumbnail_color ?? doc.thumbnailColor ?? '#6C63FF';
+  const thumbColor = doc.thumbnail_color ?? doc.thumbnailColor ?? c.primary;
   const examColor  = EXAM_COLORS[examType] || '#6C63FF';
   const difficulty = doc.difficulty;
   const viewCount  = doc.view_count ?? 0;

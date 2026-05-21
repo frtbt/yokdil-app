@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, useColorScheme,
+  KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,8 +9,8 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../store/useAuthStore';
-import { useAppStore } from '../../store/useAppStore';
 import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../store/useTheme';
 import type { ComponentProps } from 'react';
 import DatePickerField from '../../components/DatePickerField';
 
@@ -53,11 +53,8 @@ function toIsoDate(display: string): string | null {
 }
 
 export default function ProfileEditScreen() {
-  const systemScheme = useColorScheme();
-  const { isDarkMode } = useAppStore();
+  const { colors: c, gradients } = useTheme();
   const { user, saveProfile } = useAuthStore();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c    = dark ? Colors.dark : Colors.light;
 
   const [name,        setName]        = useState(user?.name ?? '');
   const [university,  setUniversity]  = useState(user?.university ?? '');
@@ -96,7 +93,7 @@ export default function ProfileEditScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={[styles.root, { backgroundColor: c.background }]}>
-        <LinearGradient colors={['#0F0F1A', '#1A1A3E']} style={styles.header}>
+        <LinearGradient colors={gradients.header} style={styles.header}>
           <SafeAreaView edges={['top']} style={styles.safeHeader}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
               <Feather name="arrow-left" size={22} color="#fff" />
@@ -225,7 +222,7 @@ export default function ProfileEditScreen() {
             style={styles.saveWrap}
           >
             <LinearGradient
-              colors={['#6C63FF', '#9B59B6']}
+              colors={gradients.btn}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.saveBtn}
@@ -270,8 +267,8 @@ interface FieldRowProps {
 function FieldRow({ icon, label, c, children, alignTop }: FieldRowProps) {
   return (
     <View style={[styles.fieldRow, alignTop && { alignItems: 'flex-start' }]}>
-      <View style={[styles.fieldIconWrap, { backgroundColor: '#6C63FF20' }]}>
-        <Feather name={icon} size={16} color="#6C63FF" />
+      <View style={[styles.fieldIconWrap, { backgroundColor: c.primary + '20' }]}>
+        <Feather name={icon} size={16} color={c.primary} />
       </View>
       <View style={styles.fieldContent}>
         <Text style={[styles.fieldLabel, { color: c.textSecondary }]}>{label}</Text>
@@ -282,9 +279,18 @@ function FieldRow({ icon, label, c, children, alignTop }: FieldRowProps) {
 }
 
 function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const { colors: c } = useTheme();
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={[styles.chip, active && styles.chipActive]}>
-      <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.75}
+      style={[
+        styles.chip,
+        { backgroundColor: c.primary + '15', borderColor: c.primary + '30' },
+        active && { backgroundColor: c.primary, borderColor: c.primary },
+      ]}
+    >
+      <Text style={[styles.chipText, { color: c.primary }, active && styles.chipTextActive]}>{label}</Text>
     </TouchableOpacity>
   );
 }

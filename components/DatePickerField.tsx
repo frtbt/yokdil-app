@@ -4,6 +4,7 @@ import {
   StyleSheet, NativeSyntheticEvent, NativeScrollEvent,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useTheme } from '../store/useTheme';
 
 const ITEM_H = 50;
 const VISIBLE = 5;
@@ -23,6 +24,7 @@ interface WheelColumnProps {
 }
 
 function WheelColumn({ items, selectedIndex, onSelect, colWidth }: WheelColumnProps) {
+  const { colors: c } = useTheme();
   const ref = useRef<ScrollView>(null);
   const [local, setLocal] = useState(selectedIndex);
   const momentumRef = useRef(false);
@@ -52,7 +54,7 @@ function WheelColumn({ items, selectedIndex, onSelect, colWidth }: WheelColumnPr
   return (
     <View style={{ width: colWidth, height: ITEM_H * VISIBLE }}>
       {/* selection highlight */}
-      <View pointerEvents="none" style={[styles.highlight, { top: ITEM_H * 2 }]} />
+      <View pointerEvents="none" style={[styles.highlight, { top: ITEM_H * 2, backgroundColor: c.primary + '18', borderColor: c.primary + '33' }]} />
       <ScrollView
         ref={ref}
         snapToInterval={ITEM_H}
@@ -77,7 +79,7 @@ function WheelColumn({ items, selectedIndex, onSelect, colWidth }: WheelColumnPr
           >
             <Text style={[
               styles.wheelItem,
-              local === i ? styles.wheelItemSel : styles.wheelItemDim,
+              local === i ? [styles.wheelItemSel, { color: c.primary }] : styles.wheelItemDim,
             ]}>
               {item}
             </Text>
@@ -117,6 +119,7 @@ function parseValue(v: string) {
 }
 
 export default function DatePickerField({ value, onChange, textColor, placeholderColor, style }: DatePickerFieldProps) {
+  const { colors: c } = useTheme();
   const [visible, setVisible] = useState(false);
 
   const initial = parseValue(value);
@@ -162,7 +165,7 @@ export default function DatePickerField({ value, onChange, textColor, placeholde
         ) : (
           <Text style={[styles.triggerText, { color: placeholderColor }]}>Tarih Seç</Text>
         )}
-        <Feather name="calendar" size={16} color={displayText ? '#6C63FF' : placeholderColor} />
+        <Feather name="calendar" size={16} color={displayText ? c.primary : placeholderColor} />
       </TouchableOpacity>
 
       <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
@@ -176,7 +179,7 @@ export default function DatePickerField({ value, onChange, textColor, placeholde
             </TouchableOpacity>
             <Text style={styles.sheetTitle}>Tarih Seç</Text>
             <TouchableOpacity onPress={confirm} hitSlop={8}>
-              <Text style={styles.confirmBtn}>Tamam</Text>
+              <Text style={[styles.confirmBtn, { color: c.primary }]}>Tamam</Text>
             </TouchableOpacity>
           </View>
 

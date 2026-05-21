@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  useColorScheme, ActivityIndicator, Animated,
+  ActivityIndicator, Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,6 +10,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 import { useAppStore } from '../../store/useAppStore';
+import { useTheme } from '../../store/useTheme';
 import { useExamStore } from '../../store/useExamStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import type { Exam } from '../../store/useExamStore';
@@ -76,8 +77,8 @@ function ExamPill({ label, active, onPress }: PillProps) {
 
 // ─── ExamCard ─────────────────────────────────────────────────────────────────
 interface CardProps { exam: Exam; isDark: boolean; onPress: () => void }
-function ExamCard({ exam, isDark, onPress }: CardProps) {
-  const c         = isDark ? Colors.dark : Colors.light;
+function ExamCard({ exam, onPress }: Omit<CardProps, 'isDark'>) {
+  const { colors: c } = useTheme();
   const color     = EXAM_TYPE_COLORS[exam.exam_type] ?? '#6C63FF';
   const diffColor = DIFF_COLORS[exam.difficulty] ?? '#FF9A3C';
   const completed = exam.user_completed;
@@ -176,11 +177,7 @@ function ExamCard({ exam, isDark, onPress }: CardProps) {
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 export default function ExamsScreen() {
-  const systemScheme = useColorScheme();
-  const { isDarkMode } = useAppStore();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c    = dark ? Colors.dark : Colors.light;
-
+  const { colors: c, dark, gradients } = useTheme();
   const router = useRouter();
   const { token } = useAuthStore();
   const { exams, loadingExams, fetchExams } = useExamStore();
@@ -201,15 +198,15 @@ export default function ExamsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
       {/* Header gradient */}
-      <LinearGradient colors={['#0F0F1A', '#1A1A3E']} style={styles.header}>
+      <LinearGradient colors={gradients.header} style={styles.header}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerInner}>
             <View>
               <Text style={styles.headerTitle}>Denemeler</Text>
               <Text style={styles.headerSub}>Cevap anahtarlı, açıklamalı sınavlar</Text>
             </View>
-            <View style={[styles.headerIcon, { backgroundColor: '#6C63FF22' }]}>
-              <Feather name="clipboard" size={22} color="#6C63FF" />
+            <View style={[styles.headerIcon, { backgroundColor: c.primary + '22' }]}>
+              <Feather name="clipboard" size={22} color={c.primary} />
             </View>
           </View>
 
@@ -239,7 +236,7 @@ export default function ExamsScreen() {
       >
         {loadingExams ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator size="large" color="#6C63FF" />
+            <ActivityIndicator size="large" color={c.primary} />
             <Text style={[styles.loadingText, { color: c.textSecondary }]}>
               Yükleniyor...
             </Text>
@@ -247,7 +244,7 @@ export default function ExamsScreen() {
         ) : exams.length === 0 ? (
           <View style={styles.emptyWrap}>
             <View style={[styles.emptyIcon, { backgroundColor: '#1E1C3A' }]}>
-              <Feather name="inbox" size={36} color="#6C63FF" />
+              <Feather name="inbox" size={36} color={c.primary} />
             </View>
             <Text style={[styles.emptyTitle, { color: c.text }]}>
               Henüz deneme yok
@@ -261,7 +258,6 @@ export default function ExamsScreen() {
             <ExamCard
               key={exam.id}
               exam={exam}
-              isDark={dark}
               onPress={() => router.push(`/exam/${exam.id}` as never)}
             />
           ))

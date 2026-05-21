@@ -2,7 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   Dimensions, Animated, KeyboardAvoidingView, Platform,
-  ScrollView, ActivityIndicator, Alert,
+  ScrollView, ActivityIndicator, Alert, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +11,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useTheme } from '../../store/useTheme';
 import {
   GOOGLE_WEB_CLIENT_ID,
   GOOGLE_ANDROID_CLIENT_ID,
@@ -56,6 +57,7 @@ function AnimatedInput({
   isPassword, keyboardType, autoCapitalize,
   hasError, returnKeyType, onSubmitEditing, inputRef,
 }: InputProps) {
+  const { colors: c } = useTheme();
   const focusAnim = useRef(new Animated.Value(0)).current;
   const [showPwd, setShowPwd] = useState(false);
 
@@ -66,14 +68,14 @@ function AnimatedInput({
 
   const borderColor = focusAnim.interpolate({
     inputRange:  [0, 1],
-    outputRange: [hasError ? 'rgba(245,87,108,0.7)' : 'rgba(255,255,255,0.12)', '#6C63FF'],
+    outputRange: [hasError ? 'rgba(245,87,108,0.7)' : 'rgba(255,255,255,0.12)', c.primary],
   });
   const shadowOpacity = focusAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.35] });
 
   return (
     <Animated.View style={[
       styles.inputWrap,
-      { borderColor, shadowOpacity, shadowColor: '#6C63FF', shadowRadius: 10, elevation: 0 },
+      { borderColor, shadowOpacity, shadowColor: c.primary, shadowRadius: 10, elevation: 0 },
     ]}>
       <Feather name={icon as any} size={18} color="rgba(255,255,255,0.4)" style={styles.inputIcon} />
       <TextInput
@@ -145,6 +147,7 @@ function GoogleButton({ onPress, loading }: { onPress: () => void; loading?: boo
 
 // ─── Primary Button ───────────────────────────────────────────────────────────
 function PrimaryButton({ label, loading, onPress }: { label: string; loading: boolean; onPress: () => void }) {
+  const { gradients, colors: c } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
   return (
     <Animated.View style={[styles.primaryBtnWrap, { transform: [{ scale }] }]}>
@@ -155,10 +158,10 @@ function PrimaryButton({ label, loading, onPress }: { label: string; loading: bo
         onPress={() => { if (!loading) { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); onPress(); } }}
       >
         <LinearGradient
-          colors={['#6C63FF', '#8B5CF6']}
+          colors={gradients.btn}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
-          style={styles.primaryBtn}
+          style={[styles.primaryBtn, { shadowColor: c.primary }]}
         >
           {loading
             ? <ActivityIndicator color="#fff" size="small" />
@@ -172,6 +175,7 @@ function PrimaryButton({ label, loading, onPress }: { label: string; loading: bo
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export default function AuthScreen() {
   const { login, register, loginWithGoogle, isLoading, error, clearError } = useAuthStore();
+  const { gradients, colors: c } = useTheme();
 
   // ── Google Sign-In (native SDK — expo-auth-session browser akışı Android'de çalışmaz) ──
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -326,9 +330,11 @@ export default function AuthScreen() {
         <SafeAreaView style={styles.safe}>
           {/* ── Logo / Header ── */}
           <View style={styles.logoWrap}>
-            <LinearGradient colors={['#6C63FF', '#9B59B6']} style={styles.logoCircle}>
-              <Feather name="book-open" size={28} color="#fff" />
-            </LinearGradient>
+            <Image
+              source={require('../../pdf-logo.png')}
+              style={styles.logoCircle}
+              resizeMode="contain"
+            />
             <Text style={styles.appName}>YÖKDİL Çalışma</Text>
             <Text style={styles.appSub}>Akademik sınav hazırlığının en akıllı yolu</Text>
           </View>
@@ -340,7 +346,7 @@ export default function AuthScreen() {
                 <Text style={[styles.tabText, mode === m && styles.tabTextActive]}>
                   {m === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}
                 </Text>
-                {mode === m && <View style={styles.tabIndicator} />}
+                {mode === m && <View style={[styles.tabIndicator, { backgroundColor: c.primary }]} />}
               </TouchableOpacity>
             ))}
           </View>
@@ -382,7 +388,7 @@ export default function AuthScreen() {
                     </Animated.View>
 
                     <TouchableOpacity style={styles.forgotWrap} onPress={() => Haptics.selectionAsync()}>
-                      <Text style={styles.forgotText}>Şifremi Unuttum</Text>
+                      <Text style={[styles.forgotText, { color: c.primary }]}>Şifremi Unuttum</Text>
                     </TouchableOpacity>
 
                     {error && mode === 'login' && (
@@ -397,7 +403,7 @@ export default function AuthScreen() {
                     <View style={styles.switchRow}>
                       <Text style={styles.switchLabel}>Hesabın yok mu? </Text>
                       <TouchableOpacity onPress={() => switchMode('register')}>
-                        <Text style={styles.switchLink}>Kayıt Ol</Text>
+                        <Text style={[styles.switchLink, { color: c.primary }]}>Kayıt Ol</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -464,7 +470,7 @@ export default function AuthScreen() {
                     <View style={styles.switchRow}>
                       <Text style={styles.switchLabel}>Zaten hesabın var mı? </Text>
                       <TouchableOpacity onPress={() => switchMode('login')}>
-                        <Text style={styles.switchLink}>Giriş Yap</Text>
+                        <Text style={[styles.switchLink, { color: c.primary }]}>Giriş Yap</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -515,10 +521,9 @@ const styles = StyleSheet.create({
   // ── Logo ──
   logoWrap: { alignItems: 'center', paddingTop: 12, paddingBottom: 20 },
   logoCircle: {
-    width: 64, height: 64, borderRadius: 20,
-    alignItems: 'center', justifyContent: 'center',
+    width: 88, height: 88, borderRadius: 22,
     marginBottom: 12,
-    shadowColor: '#6C63FF', shadowOpacity: 0.5, shadowRadius: 16, shadowOffset: { width: 0, height: 4 },
+    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 16, shadowOffset: { width: 0, height: 4 },
     elevation: 8,
   },
   appName: { fontSize: 22, fontWeight: '800', color: '#fff', letterSpacing: -0.4 },

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  Alert, ActivityIndicator, useColorScheme,
+  Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useExamStore } from '../../store/useExamStore';
 import type { Question } from '../../store/useExamStore';
 import { useAppStore } from '../../store/useAppStore';
+import { useTheme } from '../../store/useTheme';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Colors } from '../../constants/Colors';
 
@@ -38,10 +39,7 @@ export default function ExamScreen() {
   const { id }        = useLocalSearchParams<{ id: string }>();
   const examId        = parseInt(id ?? '0', 10);
 
-  const systemScheme  = useColorScheme();
-  const { isDarkMode } = useAppStore();
-  const dark          = isDarkMode ?? systemScheme === 'dark';
-  const c             = dark ? Colors.dark : Colors.light;
+  const { colors: c, dark, gradients } = useTheme();
 
   const router        = useRouter();
   const { token }     = useAuthStore();
@@ -167,7 +165,7 @@ export default function ExamScreen() {
   if (loadingDetail || !activeExam) {
     return (
       <View style={[styles.centered, { backgroundColor: c.background }]}>
-        <ActivityIndicator size="large" color="#6C63FF" />
+        <ActivityIndicator size="large" color={c.primary} />
         <Text style={[styles.loadingText, { color: c.textSecondary }]}>Sınav yükleniyor...</Text>
       </View>
     );
@@ -178,7 +176,7 @@ export default function ExamScreen() {
       <View style={[styles.centered, { backgroundColor: c.background }]}>
         <Feather name="alert-circle" size={48} color="#F5576C" />
         <Text style={[styles.emptyTitle, { color: c.text }]}>Soru bulunamadı</Text>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: c.primary }]}>
           <Text style={styles.backBtnText}>Geri Dön</Text>
         </TouchableOpacity>
       </View>
@@ -196,7 +194,7 @@ export default function ExamScreen() {
       )}
 
       {/* Header */}
-      <LinearGradient colors={['#0F0F1A', '#1A1A3E']} style={styles.header}>
+      <LinearGradient colors={gradients.header} style={styles.header}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerRow}>
             <TouchableOpacity onPress={handleExit} style={styles.exitBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>

@@ -20,6 +20,7 @@ import {
   loadTextAnnotations, saveTextAnnotations, type TextAnnotation,
 } from '../services/db';
 import { extractPageTextsNative } from '../services/pdfText';
+import { useTheme } from '../store/useTheme';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -74,6 +75,7 @@ export default function PDFReader({
   fileUri, docId, isOffline, userName, onLoadComplete,
 }: PDFReaderProps) {
 
+  const { colors: c } = useTheme();
   const pdfRef = useRef<any>(null);
 
   // PDF state
@@ -370,8 +372,9 @@ export default function PDFReader({
   }, [currentQrUrl, linkPulse]);
 
   // Sayfa değişince QR tara (700ms gecikme — render bitmesini bekler)
+  // iOS'ta ViewShot ile native PDFKit view'ı yakalamak crash'e neden oluyor, sadece Android'de çalıştır
   useEffect(() => {
-    if (loading) return;
+    if (loading || Platform.OS === 'ios') return;
     const t = setTimeout(scanPageForQR, 700);
     return () => clearTimeout(t);
   }, [currentPage, loading, scanPageForQR]);
@@ -620,13 +623,13 @@ export default function PDFReader({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: c.background }]}>
 
       {/* ── ARAMA BARI ── */}
-      <Animated.View style={[styles.searchBar, { height: searchBarH }]}>
+      <Animated.View style={[styles.searchBar, { height: searchBarH, backgroundColor: c.surface, borderBottomColor: c.border }]}>
         <View style={styles.searchInner}>
           {isExtracting ? (
-            <ActivityIndicator size="small" color="#6C63FF" style={styles.searchIcon} />
+            <ActivityIndicator size="small" color={c.primary} style={styles.searchIcon} />
           ) : (
             <Feather name="search" size={15} color="#6B7280" style={styles.searchIcon} />
           )}
@@ -643,18 +646,18 @@ export default function PDFReader({
             autoCapitalize="none"
           />
           {searchPages.length > 0 && (
-            <View style={styles.matchRow}>
+            <View style={[styles.matchRow, { backgroundColor: c.primary + '18' }]}>
               <TouchableOpacity onPress={goPrevMatch} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Feather name="chevron-up" size={16} color="#6C63FF" />
+                <Feather name="chevron-up" size={16} color={c.primary} />
               </TouchableOpacity>
               <View style={{ alignItems: 'center' }}>
-                <Text style={styles.matchTxt}>{searchIdx + 1} / {searchPages.length}</Text>
+                <Text style={[styles.matchTxt, { color: c.primary }]}>{searchIdx + 1} / {searchPages.length}</Text>
                 {searchResultTotal > 0 && (
                   <Text style={styles.matchTotalTxt}>{searchResultTotal} eşleşme</Text>
                 )}
               </View>
               <TouchableOpacity onPress={goNextMatch} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Feather name="chevron-down" size={16} color="#6C63FF" />
+                <Feather name="chevron-down" size={16} color={c.primary} />
               </TouchableOpacity>
             </View>
           )}
@@ -721,7 +724,7 @@ export default function PDFReader({
           {currentQrUrl && !drawMode && !cropMode && !textMode && !loading && (
             <Animated.View style={[styles.linkBadge, { opacity: linkPulse }]}>
               <TouchableOpacity
-                style={styles.linkBadgeInner}
+                style={[styles.linkBadgeInner, { backgroundColor: c.primary, shadowColor: c.primary }]}
                 onPress={() => Linking.openURL(currentQrUrl).catch(() => {})}
                 activeOpacity={0.8}
               >
@@ -899,8 +902,8 @@ export default function PDFReader({
           {loading && !error && (
             <View style={styles.overlay2}>
               <Animated.View style={[styles.loadingCard, { opacity: pulseAnim }]}>
-                <View style={styles.loadingRing}>
-                  <ActivityIndicator size="large" color="#6C63FF" />
+                <View style={[styles.loadingRing, { backgroundColor: c.primary + '18', borderColor: c.primary + '33' }]}>
+                  <ActivityIndicator size="large" color={c.primary} />
                 </View>
                 <Text style={styles.loadTxt}>PDF açılıyor...</Text>
                 <Text style={styles.loadSubTxt}>Lütfen bekleyin</Text>
@@ -928,7 +931,7 @@ export default function PDFReader({
                   : 'Dosya açılamadı. Lütfen tekrar deneyin.'}
               </Text>
               <TouchableOpacity
-                style={styles.retryBtn}
+                style={[styles.retryBtn, { backgroundColor: c.primary }]}
                 onPress={() => { setRetryKey(k => k + 1); setError(false); setLoading(true); }}
               >
                 <Feather name="refresh-cw" size={14} color="#fff" />
@@ -973,6 +976,8 @@ export default function PDFReader({
           transform: [{
             translateY: toolAnim.interpolate({ inputRange: [0, 1], outputRange: [80, 0] }),
           }],
+          backgroundColor: c.surface,
+          borderTopColor: c.border,
         },
       ]}>
         {cropMode ? (
@@ -1006,7 +1011,7 @@ export default function PDFReader({
                 ]}
               />
             ))}
-            <View style={styles.sep} />
+            <View style={[styles.sep, { backgroundColor: c.border }]} />
             {TEXT_SIZES.map(s => (
               <TouchableOpacity
                 key={s}
@@ -1025,7 +1030,7 @@ export default function PDFReader({
                 </Text>
               </TouchableOpacity>
             ))}
-            <View style={styles.sep} />
+            <View style={[styles.sep, { backgroundColor: c.border }]} />
             <ToolBtn
               icon="check-circle"
               onPress={() => {
@@ -1042,8 +1047,8 @@ export default function PDFReader({
           <View style={styles.toolRow}>
             <ToolBtn icon="arrow-left"  onPress={() => goToPage(currentPage - 1)} disabled={currentPage <= 1} />
             <ToolBtn icon="arrow-right" onPress={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages} />
-            <View style={styles.sep} />
-            <ToolBtn icon="search" onPress={toggleSearch} active={searchVisible} activeColor="#6C63FF" />
+            <View style={[styles.sep, { backgroundColor: c.border }]} />
+            <ToolBtn icon="search" onPress={toggleSearch} active={searchVisible} activeColor={c.primary} />
             <ToolBtn
               icon="edit-2"
               onPress={() => { setDrawMode(true); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); }}
@@ -1083,7 +1088,7 @@ export default function PDFReader({
                 ]}
               />
             ))}
-            <View style={styles.sep} />
+            <View style={[styles.sep, { backgroundColor: c.border }]} />
             {PEN_WIDTHS.map(w => (
               <TouchableOpacity
                 key={w}
@@ -1099,7 +1104,7 @@ export default function PDFReader({
                 }} />
               </TouchableOpacity>
             ))}
-            <View style={styles.sep} />
+            <View style={[styles.sep, { backgroundColor: c.border }]} />
             <ToolBtn icon="delete"         onPress={() => setIsEraser(!isEraser)} active={isEraser} activeColor="#F59E0B" />
             <ToolBtn icon="corner-up-left" onPress={handleUndo}  disabled={strokes.length === 0} />
             <ToolBtn icon="trash-2"        onPress={handleClear} />
@@ -1119,19 +1124,21 @@ function ToolBtn({
   icon: string; onPress: () => void; active?: boolean;
   activeColor?: string; disabled?: boolean; label?: string;
 }) {
+  const { colors: tc } = useTheme();
+  const effectiveColor = activeColor ?? tc.primary;
   return (
     <TouchableOpacity
       style={[
         styles.toolBtn,
-        active    && { backgroundColor: (activeColor ?? '#6C63FF') + '22' },
+        active    && { backgroundColor: effectiveColor + '22' },
         disabled  && { opacity: 0.35 },
       ]}
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.7}
     >
-      <Feather name={icon as any} size={19} color={active ? (activeColor ?? '#6C63FF') : '#CBD5E1'} />
-      {label ? <Text style={[styles.toolBadge, { color: activeColor ?? '#6C63FF' }]}>{label}</Text> : null}
+      <Feather name={icon as any} size={19} color={active ? effectiveColor : '#CBD5E1'} />
+      {label ? <Text style={[styles.toolBadge, { color: effectiveColor }]}>{label}</Text> : null}
     </TouchableOpacity>
   );
 }

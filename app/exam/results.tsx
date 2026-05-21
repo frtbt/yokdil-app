@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, TouchableOpacity,
-  Linking, useColorScheme,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,8 +11,7 @@ import { useRouter } from 'expo-router';
 
 import { useExamStore } from '../../store/useExamStore';
 import type { QuestionCorrection } from '../../store/useExamStore';
-import { useAppStore } from '../../store/useAppStore';
-import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../store/useTheme';
 
 function formatTime(seconds: number): string {
   if (!seconds) return '—';
@@ -36,12 +35,11 @@ function extractYouTubeId(url: string): string | null {
 interface QuestionRowProps {
   correction: QuestionCorrection;
   index: number;
-  isDark: boolean;
 }
 
-function QuestionRow({ correction, index, isDark }: QuestionRowProps) {
+function QuestionRow({ correction, index }: QuestionRowProps) {
   const [expanded, setExpanded] = useState(false);
-  const c = isDark ? Colors.dark : Colors.light;
+  const { colors: c, dark } = useTheme();
 
   const toggle = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -58,10 +56,10 @@ function QuestionRow({ correction, index, isDark }: QuestionRowProps) {
   };
 
   const rowBg = correction.is_correct
-    ? (isDark ? '#0E2217' : '#F0FFF5')
+    ? (dark ? '#0E2217' : '#F0FFF5')
     : correction.your_answer === null
-      ? (isDark ? '#1A1A2E' : '#F3F4F6')
-      : (isDark ? '#2A1A1E' : '#FFF0F2');
+      ? (dark ? '#1A1A2E' : '#F3F4F6')
+      : (dark ? '#2A1A1E' : '#FFF0F2');
 
   const statusColor = correction.is_correct ? '#43E97B'
                     : correction.your_answer === null ? '#9CA3AF'
@@ -98,8 +96,8 @@ function QuestionRow({ correction, index, isDark }: QuestionRowProps) {
             {Object.entries(correction.options).map(([letter, text]) => {
               const isCorrect  = letter === correction.correct_answer;
               const isYourWrong = letter === correction.your_answer && !correction.is_correct;
-              const bg = isCorrect  ? (isDark ? '#0E2217' : '#F0FFF5')
-                       : isYourWrong ? (isDark ? '#2A1A1E' : '#FFF0F2')
+              const bg = isCorrect  ? (dark ? '#0E2217' : '#F0FFF5')
+                       : isYourWrong ? (dark ? '#2A1A1E' : '#FFF0F2')
                        : 'transparent';
               const borderClr = isCorrect ? '#43E97B' : isYourWrong ? '#F5576C' : c.border;
               const txtColor  = isCorrect ? '#43E97B' : isYourWrong ? '#F5576C' : c.textSecondary;
@@ -134,9 +132,9 @@ function QuestionRow({ correction, index, isDark }: QuestionRowProps) {
 
           {/* Explanation */}
           {correction.explanation ? (
-            <View style={[styles.explanationBox, { backgroundColor: isDark ? '#1E1C3A' : '#EEF0FF', borderColor: '#6C63FF44' }]}>
+            <View style={[styles.explanationBox, { backgroundColor: dark ? '#1E1C3A' : '#EEF0FF', borderColor: c.primary + '44' }]}>
               <Feather name="info" size={14} color="#7C73FF" style={{ marginTop: 2 }} />
-              <Text style={[styles.explanationText, { color: isDark ? '#C4C0FF' : '#4A47A3' }]}>
+              <Text style={[styles.explanationText, { color: dark ? '#C4C0FF' : '#4A47A3' }]}>
                 {correction.explanation}
               </Text>
             </View>
@@ -161,10 +159,7 @@ function QuestionRow({ correction, index, isDark }: QuestionRowProps) {
 
 // ─── Results Screen ───────────────────────────────────────────────────────────
 export default function ResultsScreen() {
-  const systemScheme = useColorScheme();
-  const { isDarkMode } = useAppStore();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c    = dark ? Colors.dark : Colors.light;
+  const { colors: c, dark, gradients } = useTheme();
 
   const router      = useRouter();
   const { lastResult, activeExam } = useExamStore();
@@ -174,7 +169,7 @@ export default function ResultsScreen() {
       <View style={[styles.centered, { backgroundColor: c.background }]}>
         <Feather name="alert-circle" size={48} color="#F5576C" />
         <Text style={[styles.noResultTitle, { color: c.text }]}>Sonuç bulunamadı</Text>
-        <TouchableOpacity onPress={() => router.replace('/(tabs)' as never)} style={styles.homeBtn}>
+        <TouchableOpacity onPress={() => router.replace('/(tabs)' as never)} style={[styles.homeBtn, { backgroundColor: c.primary }]}>
           <Text style={styles.homeBtnText}>Ana Sayfaya Dön</Text>
         </TouchableOpacity>
       </View>
@@ -189,7 +184,7 @@ export default function ResultsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: c.background }]}>
-      <LinearGradient colors={['#0F0F1A', '#1A1A3E']} style={styles.header}>
+      <LinearGradient colors={gradients.header} style={styles.header}>
         <SafeAreaView edges={['top']}>
           <View style={styles.headerRow}>
             <TouchableOpacity
@@ -256,14 +251,14 @@ export default function ResultsScreen() {
               activeOpacity={0.85}
               style={[styles.actionBtn, { backgroundColor: c.surface, borderColor: c.border }]}
             >
-              <Feather name="refresh-cw" size={16} color="#6C63FF" />
-              <Text style={[styles.actionBtnText, { color: '#6C63FF' }]}>Tekrar Çöz</Text>
+              <Feather name="refresh-cw" size={16} color={c.primary} />
+              <Text style={[styles.actionBtnText, { color: c.primary }]}>Tekrar Çöz</Text>
             </TouchableOpacity>
           ) : null}
           <TouchableOpacity
             onPress={() => router.replace('/(tabs)' as never)}
             activeOpacity={0.85}
-            style={[styles.actionBtn, { backgroundColor: '#6C63FF' }]}
+            style={[styles.actionBtn, { backgroundColor: c.primary }]}
           >
             <Feather name="home" size={16} color="#fff" />
             <Text style={[styles.actionBtnText, { color: '#fff' }]}>Ana Sayfaya Dön</Text>
@@ -279,7 +274,6 @@ export default function ResultsScreen() {
             key={correction.question_id}
             correction={correction}
             index={idx}
-            isDark={dark}
           />
         ))}
       </ScrollView>

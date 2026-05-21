@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, useColorScheme,
+  View, Text, StyleSheet, TouchableOpacity,
   Switch, Animated, ScrollView, Alert, Dimensions, ActivityIndicator, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import { BarChart, PieChart } from 'react-native-gifted-charts';
 import { useAppStore } from '../../store/useAppStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Colors } from '../../constants/Colors';
+import { useTheme } from '../../store/useTheme';
 import type { ComponentProps } from 'react';
 import type { RecentHistoryItem } from '../../store/useAppStore';
 import {
@@ -33,14 +34,13 @@ function isoToDisplay(iso: string | null | undefined): string | null {
 type FeatherName = ComponentProps<typeof Feather>['name'];
 
 export default function ProfileScreen() {
-  const systemScheme = useColorScheme();
-  const { isDarkMode, toggleDarkMode, studyMinutes, todayStudySec, openedDocs, downloadedIds,
+  const { colors: c, dark, isFuatBaskanMode, gradients } = useTheme();
+  const { toggleDarkMode, toggleFuatBaskanMode,
+          studyMinutes, todayStudySec, openedDocs, downloadedIds,
           favoriteIds, streakDays, recentHistory, isLoadingStats,
           fetchUserStats, weeklyData, examBreakdown, diffBreakdown,
           examsTaken, bestScore, avgScore, totalQuestionsAnswered } = useAppStore();
   const { user, token, logout, fetchProfile } = useAuthStore();
-  const dark = isDarkMode ?? systemScheme === 'dark';
-  const c    = dark ? Colors.dark : Colors.light;
   const hours = Math.floor(studyMinutes / 60);
 
   useEffect(() => {
@@ -104,10 +104,10 @@ export default function ProfileScreen() {
   return (
     <View style={[styles.root, { backgroundColor: c.background }]}>
       {/* ── Header ── */}
-      <LinearGradient colors={['#0F0F1A', '#1A1A3E']} style={styles.header}>
+      <LinearGradient colors={gradients.header} style={styles.header}>
         <SafeAreaView edges={['top']} style={styles.safeHeader}>
           <View style={styles.avatar}>
-            <LinearGradient colors={['#6C63FF', '#9B59B6']} style={styles.avatarGrad}>
+            <LinearGradient colors={gradients.btn} style={styles.avatarGrad}>
               <Text style={styles.avatarLetter}>{avatarLetter}</Text>
             </LinearGradient>
           </View>
@@ -146,11 +146,11 @@ export default function ProfileScreen() {
               <Text style={[styles.profileCardTitle, { color: c.text }]}>Profil Bilgileri</Text>
               <TouchableOpacity
                 onPress={() => router.push('/profile/edit')}
-                style={styles.editBtn}
+                style={[styles.editBtn, { backgroundColor: c.primary + '15' }]}
                 activeOpacity={0.75}
               >
-                <Feather name="edit-2" size={14} color="#6C63FF" />
-                <Text style={styles.editBtnText}>Düzenle</Text>
+                <Feather name="edit-2" size={14} color={c.primary} />
+                <Text style={[styles.editBtnText, { color: c.primary }]}>Düzenle</Text>
               </TouchableOpacity>
             </View>
 
@@ -173,8 +173,8 @@ export default function ProfileScreen() {
 
             {/* Daily goal + progress */}
             <View style={[styles.infoRow, { borderTopColor: c.border }]}>
-              <View style={[styles.infoIcon, { backgroundColor: '#6C63FF15' }]}>
-                <Feather name="clock" size={16} color="#6C63FF" />
+              <View style={[styles.infoIcon, { backgroundColor: c.primary + '15' }]}>
+                <Feather name="clock" size={16} color={c.primary} />
               </View>
               <View style={{ flex: 1, gap: 6 }}>
                 <View style={styles.infoRowTop}>
@@ -185,7 +185,7 @@ export default function ProfileScreen() {
                 </View>
                 {goalMin > 0 && (
                   <View style={[styles.progressBar, { backgroundColor: c.border }]}>
-                    <View style={[styles.progressFill, { width: `${goalProgress * 100}%` }]} />
+                    <View style={[styles.progressFill, { width: `${goalProgress * 100}%`, backgroundColor: c.primary }]} />
                   </View>
                 )}
               </View>
@@ -200,7 +200,7 @@ export default function ProfileScreen() {
           {/* ── Grafikler ── */}
           {isLoadingStats ? (
             <View style={styles.statsLoading}>
-              <ActivityIndicator color="#6C63FF" />
+              <ActivityIndicator color={c.primary} />
               <Text style={[styles.statsLoadingText, { color: c.textSecondary }]}>İstatistikler yükleniyor…</Text>
             </View>
           ) : (
@@ -226,7 +226,7 @@ export default function ProfileScreen() {
             style={styles.planCard}
           >
             <LinearGradient
-              colors={['#6C63FF', '#9B59B6']}
+              colors={gradients.btn}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
               style={styles.planCardInner}
             >
@@ -250,6 +250,12 @@ export default function ProfileScreen() {
               hasToggle toggleValue={dark}
               onToggle={() => { Haptics.selectionAsync(); toggleDarkMode(); }}
               isDark={dark}
+            />
+            <SettingRow
+              icon="star" label="Fuat Başkan Modu"
+              hasToggle toggleValue={isFuatBaskanMode}
+              onToggle={() => { Haptics.selectionAsync(); toggleFuatBaskanMode(); }}
+              isDark={dark} accent="#e67e22"
             />
             <SettingRow
               icon="bell" label="Günlük Hatırlatıcı"
@@ -298,8 +304,8 @@ function RecentHistorySection({ history, c }: { history: RecentHistoryItem[]; c:
               activeOpacity={0.8}
               style={[recentStyles.row, { backgroundColor: c.surface, borderColor: c.border }]}
             >
-              <View style={[recentStyles.thumb, { backgroundColor: (item.thumbnail_color ?? '#6C63FF') + '25' }]}>
-                <Feather name="file-text" size={16} color={item.thumbnail_color ?? '#6C63FF'} />
+              <View style={[recentStyles.thumb, { backgroundColor: (item.thumbnail_color ?? c.primary) + '25' }]}>
+                <Feather name="file-text" size={16} color={item.thumbnail_color ?? c.primary} />
               </View>
               <View style={{ flex: 1, gap: 3 }}>
                 <Text style={[recentStyles.title, { color: c.text }]} numberOfLines={1}>
@@ -363,6 +369,7 @@ interface ChartProps {
 }
 
 function StatsCharts({ weeklyData, examBreakdown, diffBreakdown, isDark, c }: ChartProps) {
+  const { colors: t } = useTheme();
   const chartW = SCREEN_W - 40;
   const hasWeekly = weeklyData.some(d => d.minutes > 0);
   const hasExam   = examBreakdown.length > 0;
@@ -386,9 +393,9 @@ function StatsCharts({ weeklyData, examBreakdown, diffBreakdown, isDark, c }: Ch
     return {
       value:        d.minutes,
       label,
-      frontColor:   d.minutes > 0 ? '#6C63FF' : (isDark ? '#2A2A3E' : '#E5E7EB'),
+      frontColor:   d.minutes > 0 ? t.primary : (isDark ? '#2A2A3E' : '#E5E7EB'),
       topLabelComponent: d.minutes > 0
-        ? () => <Text style={{ color: '#6C63FF', fontSize: 9, fontWeight: '700' }}>{d.minutes}dk</Text>
+        ? () => <Text style={{ color: t.primary, fontSize: 9, fontWeight: '700' }}>{d.minutes}dk</Text>
         : undefined,
     };
   });
@@ -451,7 +458,7 @@ function StatsCharts({ weeklyData, examBreakdown, diffBreakdown, isDark, c }: Ch
               centerLabelComponent={() => (
                 <View style={{ alignItems: 'center' }}>
                   <Text style={{ color: c.text, fontSize: 11, fontWeight: '700' }}>Toplam</Text>
-                  <Text style={{ color: '#6C63FF', fontSize: 13, fontWeight: '800' }}>
+                  <Text style={{ color: t.primary, fontSize: 13, fontWeight: '800' }}>
                     {examBreakdown.reduce((s, e) => s + e.minutes, 0)}dk
                   </Text>
                 </View>
@@ -540,10 +547,11 @@ interface InfoRowProps {
   c: typeof Colors.dark;
 }
 function InfoRow({ icon, label, value, c }: InfoRowProps) {
+  const { colors: t } = useTheme();
   return (
     <View style={[styles.infoRow, { borderTopColor: c.border }]}>
-      <View style={[styles.infoIcon, { backgroundColor: '#6C63FF15' }]}>
-        <Feather name={icon} size={16} color="#6C63FF" />
+      <View style={[styles.infoIcon, { backgroundColor: t.primary + '15' }]}>
+        <Feather name={icon} size={16} color={t.primary} />
       </View>
       <View style={styles.infoRowTop}>
         <Text style={[styles.infoLabel, { color: c.textSecondary }]}>{label}</Text>
@@ -567,9 +575,10 @@ interface SettingRowProps {
   accent?: string;
   danger?: boolean;
 }
-function SettingRow({ icon, label, value, hasToggle, toggleValue, onToggle, onPress, isDark, accent = '#6C63FF', danger }: SettingRowProps) {
-  const c     = isDark ? Colors.dark : Colors.light;
-  const color = danger ? '#F5576C' : accent;
+function SettingRow({ icon, label, value, hasToggle, toggleValue, onToggle, onPress, isDark, accent, danger }: SettingRowProps) {
+  const { colors: c } = useTheme();
+  const defaultAccent = c.primary;
+  const color = danger ? '#F5576C' : (accent ?? defaultAccent);
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -586,7 +595,7 @@ function SettingRow({ icon, label, value, hasToggle, toggleValue, onToggle, onPr
           <Switch
             value={toggleValue}
             onValueChange={onToggle}
-            trackColor={{ false: c.border, true: '#6C63FF' }}
+            trackColor={{ false: c.border, true: c.primary }}
             thumbColor="#fff"
           />
         ) : onPress ? (
@@ -609,10 +618,11 @@ interface ExamStatsCardProps {
 }
 
 function ExamStatsCard({ examsTaken, bestScore, avgScore, totalQuestions, c }: ExamStatsCardProps) {
+  const { colors: t } = useTheme();
   const scoreColor = bestScore >= 70 ? '#43E97B' : bestScore >= 50 ? '#FF9A3C' : '#F5576C';
 
   const items = [
-    { icon: 'clipboard' as FeatherName, label: 'Çözülen',   value: String(examsTaken),     color: '#6C63FF' },
+    { icon: 'clipboard' as FeatherName, label: 'Çözülen',   value: String(examsTaken),     color: t.primary },
     { icon: 'award'     as FeatherName, label: 'En Yüksek',  value: `%${bestScore}`,        color: scoreColor },
     { icon: 'bar-chart-2' as FeatherName, label: 'Ortalama', value: `%${avgScore}`,         color: '#F7971E' },
     { icon: 'check-square' as FeatherName, label: 'Soru',    value: String(totalQuestions), color: '#4ECDC4' },
@@ -622,13 +632,13 @@ function ExamStatsCard({ examsTaken, bestScore, avgScore, totalQuestions, c }: E
     <View style={[examCardStyles.card, { backgroundColor: c.surface, borderColor: c.border }]}>
       <View style={examCardStyles.header}>
         <View style={examCardStyles.headerLeft}>
-          <View style={examCardStyles.iconWrap}>
-            <Feather name="clipboard" size={16} color="#6C63FF" />
+          <View style={[examCardStyles.iconWrap, { backgroundColor: t.primary + '20' }]}>
+            <Feather name="clipboard" size={16} color={t.primary} />
           </View>
           <Text style={[examCardStyles.title, { color: c.text }]}>Deneme İstatistikleri</Text>
         </View>
         <TouchableOpacity onPress={() => router.push('/(tabs)/exams' as never)}>
-          <Text style={examCardStyles.link}>Tümü →</Text>
+          <Text style={[examCardStyles.link, { color: t.primary }]}>Tümü →</Text>
         </TouchableOpacity>
       </View>
       <View style={examCardStyles.grid}>
