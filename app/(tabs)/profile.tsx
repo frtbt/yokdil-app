@@ -34,8 +34,8 @@ function isoToDisplay(iso: string | null | undefined): string | null {
 type FeatherName = ComponentProps<typeof Feather>['name'];
 
 export default function ProfileScreen() {
-  const { colors: c, dark, isFuatBaskanMode, gradients } = useTheme();
-  const { toggleDarkMode, toggleFuatBaskanMode,
+  const { colors: c, dark, gradients } = useTheme();
+  const { toggleDarkMode,
           studyMinutes, todayStudySec, openedDocs, downloadedIds,
           favoriteIds, streakDays, recentHistory, isLoadingStats,
           fetchUserStats, weeklyData, examBreakdown, diffBreakdown,
@@ -250,12 +250,6 @@ export default function ProfileScreen() {
               hasToggle toggleValue={dark}
               onToggle={() => { Haptics.selectionAsync(); toggleDarkMode(); }}
               isDark={dark}
-            />
-            <SettingRow
-              icon="star" label="Fuat Başkan Modu"
-              hasToggle toggleValue={isFuatBaskanMode}
-              onToggle={() => { Haptics.selectionAsync(); toggleFuatBaskanMode(); }}
-              isDark={dark} accent="#e67e22"
             />
             <SettingRow
               icon="bell" label="Günlük Hatırlatıcı"
